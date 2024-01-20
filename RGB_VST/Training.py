@@ -161,8 +161,9 @@ def main(local_rank, num_gpus, args):
             optimizer.step()
             whole_iter_num += 1
 
-            if (local_rank == 0) and (whole_iter_num == args.train_steps):
-                torch.save(net.state_dict(), args.save_model_dir + 'RGB_VST.pth')
+            # if (local_rank == 0) and (whole_iter_num == args.train_steps):
+            if (local_rank == 0) and (whole_iter_num % 1000 == 0):
+                torch.save(net.state_dict(), args.save_model_dir + f'{whole_iter_num}' + 'RGB_VST.pth')
 
             if whole_iter_num == args.train_steps:
                 return 0

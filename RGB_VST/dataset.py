@@ -23,6 +23,23 @@ def load_list(dataset_name, data_root):
 
     return images, labels, contours
 
+def my_load_list(dataset_name, data_root):
+
+    images = []
+    labels = []
+    contours = []
+
+    img_root = data_root + dataset_name + 'my-Image/'
+    img_files = os.listdir(img_root)
+
+    for img in img_files:
+
+        images.append(img_root + img[:-4]+'.jpg')
+        labels.append(img_root.replace('/my-Image/', '/my-Mask/') + img[:-4]+'.jpg')
+        contours.append(img_root.replace('/my-Image/', '/my-Contour/') + img[:-4] + '_edge' +'.png')
+
+    return images, labels, contours
+
 
 def load_test_list(test_path, data_root):
 
@@ -48,7 +65,8 @@ class ImageData(data.Dataset):
     def __init__(self, dataset_list, data_root, transform, mode, img_size=None, scale_size=None, t_transform=None, label_14_transform=None, label_28_transform=None, label_56_transform=None, label_112_transform=None):
 
         if mode == 'train':
-            self.image_path, self.label_path, self.contour_path = load_list(dataset_list, data_root)
+            # self.image_path, self.label_path, self.contour_path = load_list(dataset_list, data_root)
+            self.image_path, self.label_path, self.contour_path = my_load_list(dataset_list, data_root)
         else:
             self.image_path = load_test_list(dataset_list, data_root)
 

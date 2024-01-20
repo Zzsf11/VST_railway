@@ -2,6 +2,7 @@ import os
 import torch
 import Training
 import Testing
+import Inferencing
 from Evaluation import main
 import argparse
 
@@ -28,6 +29,7 @@ if __name__ == "__main__":
     parser.add_argument('--Testing', default=False, type=bool, help='Testing or not')
     parser.add_argument('--save_test_path_root', default='preds/', type=str, help='save saliency maps path')
     parser.add_argument('--test_paths', type=str, default='DUTS/DUTS-TE+ECSSD+HKU-IS+PASCAL-S+DUT-O+BSD')
+    parser.add_argument('--test_video_paths', type=str, default='video')
 
     # evaluation
     parser.add_argument('--Evaluation', default=False, type=bool, help='Evaluation or not')
@@ -45,3 +47,5 @@ if __name__ == "__main__":
         Testing.test_net(args)
     if args.Evaluation:
         main.evaluate(args)
+    if args.Inferencing:
+        Inferencing.infer_net(args)
