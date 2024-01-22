@@ -137,6 +137,13 @@ class ImageData(data.Dataset):
 
     def __len__(self):
         return len(self.image_path)
+    
+    def transformer_img(self, img):
+        image_w, image_h = int(img.size[0]), int(img.size[1])
+        image = self.transform(img)
+        
+        return image, image_w, image_h
+        
 
 
 def get_loader(dataset_list, data_root, img_size, mode='train'):
@@ -182,3 +189,16 @@ def get_loader(dataset_list, data_root, img_size, mode='train'):
 
     # data_loader = data.DataLoader(dataset=dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_thread)
     return dataset
+
+def transform_only(img, img_size):
+    img = Image.fromarray(img)
+    transform = trans.Compose([
+        trans.Scale((img_size, img_size)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),  # 处理的是Tensor
+    ])
+    image_w, image_h = int(img.size[0]), int(img.size[1])
+
+    image = transform(img)
+        
+    return image, image_w, image_h

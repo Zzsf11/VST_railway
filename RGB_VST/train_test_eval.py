@@ -29,12 +29,15 @@ if __name__ == "__main__":
     parser.add_argument('--Testing', default=False, type=bool, help='Testing or not')
     parser.add_argument('--save_test_path_root', default='preds/', type=str, help='save saliency maps path')
     parser.add_argument('--test_paths', type=str, default='DUTS/DUTS-TE+ECSSD+HKU-IS+PASCAL-S+DUT-O+BSD')
-    parser.add_argument('--test_video_paths', type=str, default='video')
 
     # evaluation
     parser.add_argument('--Evaluation', default=False, type=bool, help='Evaluation or not')
     parser.add_argument('--methods', type=str, default='RGB_VST', help='evaluated method name')
     parser.add_argument('--save_dir', type=str, default='./', help='path for saving result.txt')
+
+
+    parser.add_argument('--Inferencing', default=False, type=bool, help='Inferencing or not')
+    parser.add_argument('--video_input', type=str, default='video')
 
     args = parser.parse_args()
 

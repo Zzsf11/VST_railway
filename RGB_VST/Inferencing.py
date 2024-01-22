@@ -2,7 +2,8 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from dataset import get_loader
+import tqdm
+from dataset import get_loader, transform_only
 import transforms as trans
 from torchvision import transforms
 import time
@@ -12,43 +13,29 @@ import numpy as np
 import os
 import cv2
 
-def video_to_frames(video_path, fps=30):
+def diff_video(vid_frames):
     """
-    Convert a video to frames with a given FPS.
+    Compute the difference of each frame in the video with the first frame.
     
     Args:
-    video_path (str): Path to the video file.
-    fps (int): Frames per second to capture.
-    
+    first_frame (np.array): The first frame of the video.
+    video (cv2.VideoCapture): The video capture object.
+
     Returns:
-    list: A list of frames as numpy arrays.
+    list: A list of frames showing the difference with the first frame.
     """
-    # 打开视频文件
-    cap = cv2.VideoCapture(video_path)
-    frames = []
-    video_fps = cap.get(cv2.CAP_PROP_FPS)  # 获取视频原始帧率
+    first_frame = vid_frames[0]
+    diff_frames = []
 
-    # 计算帧抽取间隔
-    skip_frames = round(video_fps / fps)
+    for frame in vid_frames:
+        diff = cv2.absdiff(first_frame, frame)
+        diff_frames.append(diff)
+    
+    return diff_frames
 
-    frame_idx = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+    
 
-        # 按给定 FPS 抽取帧
-        if frame_idx % skip_frames == 0:
-            frames.append(frame)
-        
-        frame_idx += 1
-
-    cap.release()
-    return frames
-
-
-
-def Infer_net(args):
+def infer_net(args):
 
     cudnn.benchmark = True
 
@@ -57,7 +44,7 @@ def Infer_net(args):
     net.eval()
 
     # load model (multi-gpu)
-    model_path = args.save_model_dir + 'RGB_VST.pth'
+    model_path = args.save_model_dir
     state_dict = torch.load(model_path)
     from collections import OrderedDict
 
@@ -73,54 +60,79 @@ def Infer_net(args):
     # net.load_state_dict(torch.load(model_path))
     # model_dict = net.state_dict()
     # print('Model loaded from {}'.format(model_path))
+    
+    # Processing the video input
+    video = cv2.VideoCapture(args.video_input)
+        
+    vid_frames = []
+    while video.isOpened():
+        success, frame = video.read()
+        if success:
+            vid_frames.append(frame)
+        else:
+            break
 
-    test_paths = args.test_paths.split('+')
-    for test_dir_img in test_paths:
+    diff_frames = diff_video(vid_frames)
+    video.release()
+    # diff_frames = vid_frames
+    
+    print('''
+                Starting testing:
+                    Testing video frame length: {}
+                '''.format(len(diff_frames)))
 
-        test_dataset = get_loader(test_dir_img, args.data_root, args.img_size, mode='test')
+    time_list = []
+    visualized_output = []
+    for i, frame in tqdm.tqdm(enumerate(diff_frames)):
+        # frame = np.expand_dims(frame, axis=0)
+        # print(frame.shape)
+        images, image_w, image_h = transform_only(frame, args.img_size)
+        images = Variable(images.cuda())
 
-        test_loader = data.DataLoader(dataset=test_dataset, batch_size=1, shuffle=False, num_workers=1)
-        print('''
-                   Starting testing:
-                       dataset: {}
-                       Testing size: {}
-                   '''.format(test_dir_img.split('/')[0], len(test_loader.dataset)))
+        starts = time.time()
+        images = images.unsqueeze(0)
+        # print(images.shape)
+        outputs_saliency, outputs_contour = net(images)
+        ends = time.time()
+        time_use = ends - starts
+        time_list.append(time_use)
 
-        time_list = []
-        for i, data_batch in enumerate(test_loader):
-            images, image_w, image_h, image_path = data_batch
-            images = Variable(images.cuda())
+        mask_1_16, mask_1_8, mask_1_4, mask_1_1 = outputs_saliency
 
-            starts = time.time()
-            outputs_saliency, outputs_contour = net(images)
-            ends = time.time()
-            time_use = ends - starts
-            time_list.append(time_use)
+        image_w, image_h = int(image_w), int(image_h)
 
-            mask_1_16, mask_1_8, mask_1_4, mask_1_1 = outputs_saliency
+        output_s = F.sigmoid(mask_1_1)
 
-            image_w, image_h = int(image_w[0]), int(image_h[0])
+        output_s = output_s.data.cpu().squeeze(0)
 
-            output_s = F.sigmoid(mask_1_1)
+        transform = trans.Compose([
+            transforms.ToPILImage(),
+            trans.Scale((image_w, image_h))
+        ])
+        output_s = transform(output_s)
+        output_s = np.array(output_s)
+        mask_bool = output_s.astype(bool)
+        mask_binary_3ch = np.dstack([mask_bool, mask_bool, mask_bool]).astype(np.uint8)
+        visualized_output.append(mask_binary_3ch * vid_frames[i])
 
-            output_s = output_s.data.cpu().squeeze(0)
+    
 
-            transform = trans.Compose([
-                transforms.ToPILImage(),
-                trans.Scale((image_w, image_h))
-            ])
-            output_s = transform(output_s)
+    # save saliency maps
+    save_test_path = args.save_test_path_root + '/video/'
+    if not os.path.exists(save_test_path):
+        os.makedirs(save_test_path)
+        
+        
+    cap = cv2.VideoCapture(-1)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    out = cv2.VideoWriter(os.path.join(save_test_path, "visualization.mp4"), fourcc, 10.0, (image_w, image_h), True)
+    for _vis_output in visualized_output:
+        frame = _vis_output
+        out.write(frame)
+    cap.release()
+    out.release()
 
-            dataset = test_dir_img.split('/')[0]
-            filename = image_path[0].split('/')[-1].split('.')[0]
-
-            # save saliency maps
-            save_test_path = args.save_test_path_root + dataset + '/RGB_VST/'
-            if not os.path.exists(save_test_path):
-                os.makedirs(save_test_path)
-            output_s.save(os.path.join(save_test_path, filename + '.png'))
-
-        print('dataset:{}, cost:{}'.format(test_dir_img.split('/')[0], np.mean(time_list) * 1000))
+    print('video:{}, cost:{}'.format(args.video_input, np.mean(time_list) * 1000))
 
 
 
