@@ -38,6 +38,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--Inferencing', default=False, type=bool, help='Inferencing or not')
     parser.add_argument('--video_input', type=str, default='video')
+    parser.add_argument('--video_output_name', type=str, default='1')
 
     args = parser.parse_args()
 
