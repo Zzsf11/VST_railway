@@ -103,11 +103,10 @@ def infer_net(args):
         new_state_dict[name] = v
     # load params
     net.load_state_dict(new_state_dict)
-    print('Model loaded from {}'.format(model_path))
+    print('Salient detection model loaded from {}'.format(model_path))
     
     # Init Classifier
     backbone = models.resnet34(weights="ResNet34_Weights.IMAGENET1K_V1")
-    num_classes = 2
     backbone = nn.Sequential(*list(backbone.children())[:-2])
     backbone.out_channels = 512
     roi_head = RoI_Head(None, None, None, out_channels=backbone.out_channels, num_classes=2)
@@ -116,26 +115,31 @@ def infer_net(args):
     pth_path = '/opt/data/private/zsf/VST_railway/Classification/final_res34_finetune.pth'
     state_dict = torch.load(pth_path)
     classifier_model.load_state_dict(state_dict)
-    print('classifier loaded from {}'.format(pth_path))
+    print('Classifier loaded from {}'.format(pth_path))
     classifier_model.cuda()
     classifier_model.eval()
     
+    
     # Inin MOT model
+    print('<<<<<<<Tracking model loadeding!>>>>>>>')
     args.track_thresh = 0.5
     args.mot20 = false
-    args.track_buffer = 30
-    args.match_thresh = 0.8
+    args.track_buffer = 30 # 30
+    args.match_thresh = 0.8 # 0.8
     args.fps = 30
     tracker = BYTETracker(args, frame_rate=args.fps)
-    
+
     
     # Processing the video input
     video = cv2.VideoCapture(args.video_input)
         
     vid_frames = []
     print('<<Loding the video frames!>>')
+    frame_num = 0
     while video.isOpened():
+        print(f"Reading frame{frame_num}!")
         success, frame = video.read()
+        frame_num += 1
         if success:
             vid_frames.append(frame)
         else:
@@ -143,7 +147,7 @@ def infer_net(args):
 
     diff_frames = diff_video(vid_frames)
     video.release()
-    # diff_frames = vid_frames
+
     
     print('''
                 Starting testing:
@@ -162,9 +166,9 @@ def infer_net(args):
         starts = time.time()
         images = images.unsqueeze(0)
         # print(images.shape)
-        outputs_saliency, outputs_contour = net(images)
+        outputs_saliency, _ = net(images)
 
-        mask_1_16, mask_1_8, mask_1_4, mask_1_1 = outputs_saliency
+        _, _, _, mask_1_1 = outputs_saliency
 
         image_w, image_h = int(image_w), int(image_h)
 
@@ -179,12 +183,11 @@ def infer_net(args):
         output_s = transform(output_s)
         output_s = np.array(output_s)
         _, mask_bool = cv2.threshold(output_s, 0, 255, cv2.THRESH_BINARY)
-        mask_binary_3ch = np.dstack([mask_bool, mask_bool, mask_bool]).astype(np.uint8)
+        # mask_binary_3ch = np.dstack([mask_bool, mask_bool, mask_bool]).astype(np.uint8) # for vis mask
         bbox_imgs, bboxes = get_proposal(mask_bool, vid_frames[i], 64)
         if len(bbox_imgs)==0:
             continue
             
-        # bbox_imgs = torch.tensor(np.stack(bbox_imgs), dtype=torch.float32).permute(0,3,1,2).to('cuda')
         # Normalization
         transform = transforms.Compose([
                 # transforms.Resize([800, 1333]),
@@ -200,14 +203,14 @@ def infer_net(args):
         print("bboxes:", bboxes)
         print('class_preds:', class_preds)
         # indices = (class_preds[:, 1] > 0.6) # filter by cls head
-        indices = (class_preds[:, 1] > 0) # all proposal box
+        indices = (class_preds[:, 1] > 0) # all proposal box, note that if using tracking module there should send all box to it
         # print('indices:', indices)
         probs = class_preds[indices]
         selected_bbox = list(compress(proposals['bbox'], indices.tolist()))
         
         detections = []
         for bbox, prob in zip(selected_bbox, probs):
-            # cv2.rectangle(vid_frames[i], (bbox[0], bbox[1]), (bbox[0]+bbox[2], bbox[1]+bbox[3]), color=(255,0,0), thickness=2)
+            # cv2.rectangle(vid_frames[i], (bbox[0], bbox[1]), (bbox[2], bbox[3]), color=(255,0,0), thickness=2)
             # cv2.putText(vid_frames[i], f'prob:{prob[0]}', (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
             detection = bbox + [prob[1].item()]  
             detections.append(detection)
@@ -217,18 +220,31 @@ def infer_net(args):
             online_tlwhs = []
             online_ids = []
             online_scores = []
-            for t in online_targets:
-                tlwh = t.tlwh
-                tid = t.track_id
-                # vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
-                # if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-                online_tlwhs.append(tlwh)
-                online_ids.append(tid)
-                online_scores.append(t.score)
-                # save results
-                results.append(
-                    f"{i},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
-                )
+            # for t in online_targets:
+            #     tlwh = t.tlwh
+            #     tid = t.track_id
+            #     # vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
+            #     # if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
+            #     online_tlwhs.append(tlwh)
+            #     online_ids.append(tid)
+            #     online_scores.append(t.score)
+            #     # save results
+            #     results.append(
+            #         f"{i},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
+            #     )
+            for t in tracker.removed_stracks:
+                if t.end_frame - t.start_frame >= 5:
+                    tlwh = t.tlwh
+                    tid = t.track_id
+                    # vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
+                    # if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
+                    online_tlwhs.append(tlwh)
+                    online_ids.append(tid)
+                    online_scores.append(t.score)
+                    # save results
+                    results.append(
+                        f"{i},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
+                    )
             ends = time.time()
             time_use = ends - starts
             time_list.append(time_use)
@@ -237,12 +253,13 @@ def infer_net(args):
             )
         else:
             online_im = vid_frames[i]
+        visualized_output.append(online_im) # result after tracking
+
+
         # visualized_output.append(vid_frames[i]) # output
         # visualized_output.append(diff_frames[i]) # diff_img
         # visualized_output.append(mask_binary_3ch) # salient detection mask
         # cv2.imwrite(f'diff_frame_{i}.jpg', diff_frames[i])
-        visualized_output.append(online_im) # result after tracking
-
 
     
 
