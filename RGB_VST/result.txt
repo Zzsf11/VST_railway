@@ -1,0 +1,10 @@
+harmonization_cv2diff8000RGB (RGB_VST): 0.0095 IoU || 0.0013 mae || 0.0137 max-fm || 0.0135 mean-fm || 0.4429 max-Emeasure || 0.4313 mean-Emeasure || 0.7067 S-measure || 0.0009 AP || 0.3186 AUC.
+harmonization_cv2diff9000RGB (RGB_VST): 0.0089 IoU || 0.0013 mae || 0.0129 max-fm || 0.0125 mean-fm || 0.4528 max-Emeasure || 0.4387 mean-Emeasure || 0.7067 S-measure || 0.0008 AP || 0.3188 AUC.
+color_transfer_cv2diff7000RGB (RGB_VST): 0.0009 IoU || 0.0573 mae || 0.0012 max-fm || 0.0012 mean-fm || 0.2591 max-Emeasure || 0.2591 mean-Emeasure || 0.6511 S-measure || 0.0003 AP || 0.2903 AUC.
+color_transfer_cv2diff6000RGB (RGB_VST): 0.0013 IoU || 0.0566 mae || 0.0018 max-fm || 0.0018 mean-fm || 0.2628 max-Emeasure || 0.2625 mean-Emeasure || 0.6510 S-measure || 0.0003 AP || 0.2877 AUC.
+my_dataset (RGB_VST): 0.0093 IoU || 0.0470 Recall_0.2 || 0.0013 mae || 0.0133 max-fm || 0.0132 mean-fm || 0.4419 max-Emeasure || 0.4310 mean-Emeasure || 0.7068 S-measure || 0.0009 AP || 0.3193 AUC.
+harmonization_cv2diff8000RGB (RGB_VST): 0.0095 IoU || 0.0457 Recall_0.2 || 0.0013 mae || 0.0137 max-fm || 0.0135 mean-fm || 0.4429 max-Emeasure || 0.4313 mean-Emeasure || 0.7067 S-measure || 0.0009 AP || 0.3186 AUC.
+harmonization_cv2diff9000RGB (RGB_VST): 0.0089 IoU || 0.0459 Recall_0.2 || 0.0013 mae || 0.0129 max-fm || 0.0125 mean-fm || 0.4528 max-Emeasure || 0.4387 mean-Emeasure || 0.7067 S-measure || 0.0008 AP || 0.3188 AUC.
+color_transfer_cv2diff7000RGB (RGB_VST): 0.0009 IoU || 0.0252 Recall_0.2 || 0.0573 mae || 0.0012 max-fm || 0.0012 mean-fm || 0.2591 max-Emeasure || 0.2591 mean-Emeasure || 0.6511 S-measure || 0.0003 AP || 0.2903 AUC.
+color_transfer_cv2diff6000RGB (RGB_VST): 0.0013 IoU || 0.0190 Recall_0.2 || 0.0566 mae || 0.0018 max-fm || 0.0018 mean-fm || 0.2628 max-Emeasure || 0.2625 mean-Emeasure || 0.6510 S-measure || 0.0003 AP || 0.2877 AUC.
+harmonization_cv2diff6000RGB (RGB_VST): 0.0097 IoU || 0.0432 Recall_0.2 || 0.0016 mae || 0.0134 max-fm || 0.0133 mean-fm || 0.4360 max-Emeasure || 0.4233 mean-Emeasure || 0.7062 S-measure || 0.0008 AP || 0.3172 AUC.

@@ -3,6 +3,7 @@ import torch
 import Training
 import Testing
 import Inferencing
+import Get_pred
 from Evaluation import main
 import argparse
 
@@ -28,7 +29,8 @@ if __name__ == "__main__":
     # test
     parser.add_argument('--Testing', default=False, type=bool, help='Testing or not')
     parser.add_argument('--save_test_path_root', default='preds/', type=str, help='save saliency maps path')
-    parser.add_argument('--test_paths', type=str, default='DUTS/DUTS-TE+ECSSD+HKU-IS+PASCAL-S+DUT-O+BSD')
+    # parser.add_argument('--test_paths', type=str, default='DUTS/DUTS-TE+ECSSD+HKU-IS+PASCAL-S+DUT-O+BSD')
+    parser.add_argument('--test_paths', type=str, default='DUTS/DUTS-TE')
 
     # evaluation
     parser.add_argument('--Evaluation', default=False, type=bool, help='Evaluation or not')
@@ -39,6 +41,9 @@ if __name__ == "__main__":
     parser.add_argument('--Inferencing', default=False, type=bool, help='Inferencing or not')
     parser.add_argument('--video_input', type=str, default='video')
     parser.add_argument('--video_output_name', type=str, default='1')
+    
+    parser.add_argument('--Get_pred', default=False, type=bool, help='Inferencing or not')
+    parser.add_argument('--data_path', type=str, default='/opt/data/private/zsf/Railway/part4/allscenes')
 
     args = parser.parse_args()
 
@@ -53,3 +58,5 @@ if __name__ == "__main__":
         main.evaluate(args)
     if args.Inferencing:
         Inferencing.infer_net(args)
+    if args.Get_pred:
+        Get_pred.get_pred(args)

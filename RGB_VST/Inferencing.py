@@ -44,18 +44,59 @@ def diff_video(vid_frames):
     diff_frames = []
 
     for i in range(num_frames):
-        if i < ref:
-            # If it's one of the first 30 frames, use the first frame as a reference
-            reference_frame = vid_frames[0]
-        else:
-            # Calculate the average of the preceding 30 frames
-            reference_frame = np.mean(vid_frames[i-ref:i], axis=0).astype(np.uint8)
-
+        # if i < ref:
+        #     # If it's one of the first 30 frames, use the first frame as a reference
+        #     reference_frame = vid_frames[0]
+        # else:
+        #     # Calculate the average of the preceding 30 frames
+        #     reference_frame = np.mean(vid_frames[i-ref:i], axis=0).astype(np.uint8)
+        reference_frame = vid_frames[0]
         # Compute the absolute difference
         diff = cv2.absdiff(reference_frame, vid_frames[i])
         diff_frames.append(diff)
 
+
     return diff_frames
+
+# def diff_video(vid_frames):
+#     """
+#     Compute the normalized difference of each frame in the video with the first frame,
+#     then restore the difference images to the original scale, ensuring pixel values do not exceed 255.
+    
+#     Args:
+#     vid_frames (list of np.array): The list containing all frames of the video.
+
+#     Returns:
+#     list: A list of frames showing the normalized difference with the first frame, 
+#           scaled back to original pixel values and clipped to ensure they are within [0, 255].
+#     """
+#     ref = 15
+#     num_frames = len(vid_frames)
+#     diff_frames = []
+#     imagenet_mean = np.array([0.485, 0.456, 0.406])
+#     imagenet_std = np.array([0.229, 0.224, 0.225])
+#     for i in range(num_frames):
+#         if i < ref:
+#             reference_frame = vid_frames[0]
+#         else:
+#             # Calculate the average of the preceding 'ref' frames
+#             reference_frame = np.mean(vid_frames[i-ref:i], axis=0).astype(np.uint8)
+
+#         # Normalize frames to [0, 1] range
+#         reference_frame_norm = reference_frame / 255.0
+#         current_frame_norm = vid_frames[i] / 255.0
+#         reference_frame_norm = reference_frame_norm - imagenet_mean
+#         reference_frame_norm = reference_frame_norm / imagenet_std
+#         current_frame_norm = current_frame_norm - imagenet_mean
+#         current_frame_norm = current_frame_norm / imagenet_std
+#         # Compute the absolute difference on normalized frames
+#         diff_norm = np.abs(reference_frame_norm - current_frame_norm)
+
+#         # Convert back to original scale [0, 255], ensuring values do not exceed 255
+#         diff = np.clip((diff_norm * imagenet_std + imagenet_mean) * 255, 0, 255).astype(np.uint8)
+#         diff_frames.append(diff)
+
+#     return diff_frames
 
 def get_proposal(mask, img, resize):
     bbox_imgs = []
@@ -184,6 +225,8 @@ def infer_net(args):
         output_s = np.array(output_s)
         _, mask_bool = cv2.threshold(output_s, 0, 255, cv2.THRESH_BINARY)
         # mask_binary_3ch = np.dstack([mask_bool, mask_bool, mask_bool]).astype(np.uint8) # for vis mask
+        
+        # TODO: bbox_imgs没用了，因为现在是从feature 取 roi
         bbox_imgs, bboxes = get_proposal(mask_bool, vid_frames[i], 64)
         if len(bbox_imgs)==0:
             continue
@@ -210,54 +253,54 @@ def infer_net(args):
         
         detections = []
         for bbox, prob in zip(selected_bbox, probs):
-            # cv2.rectangle(vid_frames[i], (bbox[0], bbox[1]), (bbox[2], bbox[3]), color=(255,0,0), thickness=2)
-            # cv2.putText(vid_frames[i], f'prob:{prob[0]}', (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+            cv2.rectangle(vid_frames[i], (bbox[0], bbox[1]), (bbox[2], bbox[3]), color=(255,0,0), thickness=2)
+            cv2.putText(vid_frames[i], f'prob:{prob[0]}', (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
             detection = bbox + [prob[1].item()]  
             detections.append(detection)
         
-        if detections is not None:
-            online_targets = tracker.update(torch.tensor(detections), [image_h, image_w], (image_h, image_w))
-            online_tlwhs = []
-            online_ids = []
-            online_scores = []
-            # for t in online_targets:
-            #     tlwh = t.tlwh
-            #     tid = t.track_id
-            #     # vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
-            #     # if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-            #     online_tlwhs.append(tlwh)
-            #     online_ids.append(tid)
-            #     online_scores.append(t.score)
-            #     # save results
-            #     results.append(
-            #         f"{i},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
-            #     )
-            for t in tracker.removed_stracks:
-                if t.end_frame - t.start_frame >= 5:
-                    tlwh = t.tlwh
-                    tid = t.track_id
-                    # vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
-                    # if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-                    online_tlwhs.append(tlwh)
-                    online_ids.append(tid)
-                    online_scores.append(t.score)
-                    # save results
-                    results.append(
-                        f"{i},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
-                    )
-            ends = time.time()
-            time_use = ends - starts
-            time_list.append(time_use)
-            online_im = plot_tracking(
-                vid_frames[i], online_tlwhs, online_ids, frame_id=i, fps=1. / time_use
-            )
-        else:
-            online_im = vid_frames[i]
-        visualized_output.append(online_im) # result after tracking
+        # if detections is not None:
+        #     online_targets = tracker.update(torch.tensor(detections), [image_h, image_w], (image_h, image_w))
+        #     online_tlwhs = []
+        #     online_ids = []
+        #     online_scores = []
+        #     # for t in online_targets:
+        #     #     tlwh = t.tlwh
+        #     #     tid = t.track_id
+        #     #     # vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
+        #     #     # if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
+        #     #     online_tlwhs.append(tlwh)
+        #     #     online_ids.append(tid)
+        #     #     online_scores.append(t.score)
+        #     #     # save results
+        #     #     results.append(
+        #     #         f"{i},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
+        #     #     )
+        #     for t in tracker.removed_stracks:
+        #         if t.end_frame - t.start_frame >= 5:
+        #             tlwh = t.tlwh
+        #             tid = t.track_id
+        #             # vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
+        #             # if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
+        #             online_tlwhs.append(tlwh)
+        #             online_ids.append(tid)
+        #             online_scores.append(t.score)
+        #             # save results
+        #             results.append(
+        #                 f"{i},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
+        #             )
+        #     ends = time.time()
+        #     time_use = ends - starts
+        #     time_list.append(time_use)
+        #     online_im = plot_tracking(
+        #         vid_frames[i], online_tlwhs, online_ids, frame_id=i, fps=1. / time_use
+        #     )
+        # else:
+        #     online_im = vid_frames[i]
+        # visualized_output.append(online_im) # result after tracking
 
 
         # visualized_output.append(vid_frames[i]) # output
-        # visualized_output.append(diff_frames[i]) # diff_img
+        visualized_output.append(diff_frames[i]) # diff_img
         # visualized_output.append(mask_binary_3ch) # salient detection mask
         # cv2.imwrite(f'diff_frame_{i}.jpg', diff_frames[i])
 

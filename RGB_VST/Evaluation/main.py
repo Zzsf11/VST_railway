@@ -19,13 +19,15 @@ def evaluate(args):
 
         for method in method_names:
 
-            pred_dir_all = osp.join(pred_dir, dataset_name, method)
+            # pred_dir_all = osp.join(pred_dir, dataset_name, method)
 
-            if dataset_name == 'DUTS':
-                gt_dir_all = osp.join(osp.join(gt_dir, dataset_setname)) + '/DUTS-TE-Mask'
-            else:
-                gt_dir_all = osp.join(osp.join(gt_dir, dataset_setname)) + '/GT'
-
+            # if dataset_name == 'DUTS':
+            #     gt_dir_all = osp.join(osp.join(gt_dir, dataset_setname)) + '/DUTS-TE-Mask'
+            # else:
+            #     gt_dir_all = osp.join(osp.join(gt_dir, dataset_setname)) + '/GT'
+            
+            pred_dir_all = pred_dir
+            gt_dir_all = gt_dir
             loader = EvalDataset(pred_dir_all, gt_dir_all)
             thread = Eval_thread(loader, method, dataset_setname, output_dir, cuda=True)
             threads.append(thread)

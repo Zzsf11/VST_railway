@@ -18,6 +18,10 @@ class Eval_thread():
     def run(self):
         Res = {}
         start_time = time.time()
+        
+        IoU = self.Eval_IoU().item()
+        Res['IoU'] = IoU
+        
         mae = self.Eval_mae()
         Res['MAE'] = mae
 
@@ -58,13 +62,14 @@ class Eval_thread():
         #     Res,
         #     os.path.join(self.output_dir, 'Detail',
         #                  self.dataset + '_' + self.method + '.pth'))
-
+        
+        
         self.LOG(
-            '{} ({}): {:.4f} mae || {:.4f} max-fm || {:.4f} mean-fm || {:.4f} max-Emeasure || {:.4f} mean-Emeasure || {:.4f} S-measure || {:.4f} AP || {:.4f} AUC.\n'
-            .format(self.dataset, self.method, mae, max_f, mean_f, max_e,
+            '{} ({}): {:.4f} IoU || {:.4f} Recall_0.2 || {:.4f} mae || {:.4f} max-fm || {:.4f} mean-fm || {:.4f} max-Emeasure || {:.4f} mean-Emeasure || {:.4f} S-measure || {:.4f} AP || {:.4f} AUC.\n'
+            .format(self.dataset, self.method, IoU, recall[51], mae, max_f, mean_f, max_e,
                     mean_e, s, avg_p, auc))
-        return '[cost:{:.4f}s] {} ({}): {:.4f} mae || {:.4f} max-fm || {:.4f} mean-fm || {:.4f} max-Emeasure || {:.4f} mean-Emeasure || {:.4f} S-measure || {:.4f} AP || {:.4f} AUC.'.format(
-            time.time() - start_time, self.dataset, self.method, mae, max_f,
+        return '[cost:{:.4f}s] {} ({}): {:.4f} IoU || {:.4f} Recall_0 || {:.4f} mae || {:.4f} max-fm || {:.4f} mean-fm || {:.4f} max-Emeasure || {:.4f} mean-Emeasure || {:.4f} S-measure || {:.4f} AP || {:.4f} AUC.'.format(
+            time.time() - start_time, self.dataset, self.method, IoU, recall[51], mae, max_f,
             mean_f, max_e, mean_e, s, avg_p, auc)
 
     def Eval_mae(self):
@@ -150,6 +155,42 @@ class Eval_thread():
             avg_auc = torch.trapz(avg_tpr, avg_fpr)
 
             return avg_auc.item(), avg_tpr, avg_fpr
+        
+    def Eval_IoU(self):
+        print('eval[IoU]: {} dataset with {} method.'.format(self.dataset, self.method))
+        avg_iou, img_num = 0.0, 0.0
+        with torch.no_grad():
+            trans = transforms.Compose([transforms.ToTensor()])
+            if self.cuda:
+                IoU = torch.zeros(1).cuda()
+            else:
+                IoU = torch.zeros(1)
+            for pred, gt in self.loader:
+                if self.cuda:
+                    pred = trans(pred).cuda()
+                    gt = trans(gt).cuda()
+                else:
+                    pred = trans(pred)
+                    gt = trans(gt)
+                
+                # Normalize predictions
+                # pred = (pred - torch.min(pred)) / (torch.max(pred) - torch.min(pred) + 1e-20)
+                
+                # # Convert to binary masks
+                # pred = (pred > 0.5).float()
+                # gt = (gt > 0.5).float()
+
+                # Calculate intersection and union
+                intersection = torch.sum(pred * gt)
+                union = torch.sum(pred) + torch.sum(gt) - intersection
+                
+                # Calculate IoU and avoid division by zero
+                current_iou = intersection / (union + 1e-20)
+                IoU += current_iou
+                img_num += 1.0
+
+            avg_iou = IoU / img_num
+            return avg_iou
 
     def Eval_Emeasure(self):
         print('eval[EMeasure]:{} dataset with {} method.'.format(
@@ -263,7 +304,7 @@ class Eval_thread():
 
             TPR[i] = tp / (tp + fn + 1e-20)
             FPR[i] = fp / (fp + tn + 1e-20)
-
+ 
         return TPR, FPR
 
     def _S_object(self, pred, gt):
