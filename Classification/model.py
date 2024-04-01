@@ -2,7 +2,8 @@ from torchvision import datasets, transforms, models, _utils
 from torchvision.ops import MultiScaleRoIAlign, boxes 
 import torch.nn.functional as F
 from typing import Dict, List, Optional, Tuple
-
+import cv2
+import os
 import torch
 from torch import nn, Tensor
 
@@ -20,14 +21,14 @@ class classifier(nn.Module):
         self.backbone = backbone
         self.roi_head = roi_head
 
-        # self.anchor_generator = models.detection.anchor_utils.AnchorGenerator(
-        #     sizes=tuple([(16, 32, 64) for _ in range(5)]),
-        #     aspect_ratios=tuple([(0.5, 1.0) for _ in range(5)]))
-        
         self.anchor_generator = models.detection.anchor_utils.AnchorGenerator(
-            sizes=((4, 8, 16),),
-            aspect_ratios=((0.5, 1.0, 2.0),),
-        )
+            sizes=tuple([(8, 12, 16) for _ in range(5)]),
+            aspect_ratios=tuple([(0.5, 1.0, 1.5) for _ in range(5)]))
+        
+        # self.anchor_generator = models.detection.anchor_utils.AnchorGenerator(
+        #     sizes=((4, 8, 16),),
+        #     aspect_ratios=((0.5, 1.0, 2.0),),
+        # )
 
         
         self.box_similarity = boxes.box_iou
@@ -36,43 +37,30 @@ class classifier(nn.Module):
             bg_iou_thresh,
             allow_low_quality_matches=True,
         )
-        
-        
-    
-    # def forward(self, x, targets):
-    #     if self.mode == 'train':
-    #         feature = self.backbone(x)
-    #         img_shape = [a.shape[-3:] for a in x]
-    #         img_list = models.detection.image_list.ImageList(x, img_shape)
-            
-    #         # 如果 feature 是一个字典，请取消下面行的注释
-    #         # features = list(feature.values())
-    #         # 如果 feature 是单个张量，请取消下面行的注释
-    #         features = [feature]
-            
-    #         # 确保 feature 是一个列表
-    #         anchors = self.anchor_generator(img_list, features) # 生成样本
-    #         labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
-            
-    #         concatenated_labels = torch.cat(labels, dim=0).to(torch.int64)
-    #         features_dict = {"0": feature}
-    #         class_logits = self.roi_head(features_dict, anchors, tuple(img_list.image_sizes))
-    #         print("class_logits:", class_logits)
-    #         loss = F.cross_entropy(class_logits, concatenated_labels, ignore_index=-1)            
-    #         return loss
-        
-    #     elif self.mode == 'test':
-    #         feature = self.backbone(x)
-    #         img_shape = [a.shape[-3:] for a in x]
-    #         img_list = models.detection.image_list.ImageList(x, img_shape)
-            
-    #         # 对于测试模式，确保 bbox 是正确格式
-    #         bbox = [torch.tensor(targets).cuda().to(torch.float32)]
-            
-    #         class_logits = self.roi_head(feature, bbox, tuple(img_list.image_sizes))
-    #         print("class_logits:", class_logits)
-    #         return class_logits
+                
+    def visualize_positive_anchors_cv2(self, image, anchors, save_path):
+        """使用cv2可视化并将图像上的正样本锚点框保存到文件"""
+        # 如果图像有标准化或其他预处理，请在此处进行相应的逆变换
+        image = image.permute(1, 2, 0).cpu().numpy().astype('uint8')
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # 如果图像是RGB，转换为BGR
 
+        for anchor in anchors:
+            x1, y1, x2, y2 = anchor.tolist()
+            # 在图像上绘制矩形框
+            cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+
+        # 保存图像
+        cv2.imwrite(save_path, image)
+    def vis(self, x, anchors, sampled_positive_anchors, matched_gt_boxes, sampled_negative_anchors):
+        vis_folder = os.path.join('/opt/data/private/zsf/VST_railway/Classification','vis_anchor')
+        if not os.path.exists(vis_folder):
+            os.makedirs(vis_folder)
+        for num in range(x.shape[0]):
+            self.visualize_positive_anchors_cv2(x[num], anchors[num],vis_folder+'/'+f"anchor{num}.jpg")
+            self.visualize_positive_anchors_cv2(x[num], sampled_positive_anchors[num],vis_folder+'/'+f"pos{num}.jpg")
+            self.visualize_positive_anchors_cv2(x[num], matched_gt_boxes[num],vis_folder+'/'+f"gt{num}.jpg")
+            self.visualize_positive_anchors_cv2(x[num], sampled_negative_anchors[num],vis_folder+'/'+f"neg{num}.jpg")
+        
     def forward(self, x, targets):
         
         if self.mode == 'train':
@@ -82,13 +70,14 @@ class classifier(nn.Module):
             # visualize_and_save_images(x, targets) 
             
             # 如果 feature 是一个字典，请取消下面行的注释
-            # features = list(feature.values())
+            features = list(feature.values())
             # 如果 feature 是单个张量，请取消下面行的注释
-            features = [feature]
+            # features = [feature]
             
             # 确保 feature 是一个列表
             anchors = self.anchor_generator(img_list, features)  # 生成样本
             labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
+            
             
             # 对正负样本进行采样，以保持1:1比例
             positive_indices = [label == 1 for label in labels]
@@ -124,13 +113,15 @@ class classifier(nn.Module):
 
             # 合并正负样本锚点
             sampled_anchors = [torch.cat((pos, neg), dim=0) for pos, neg in zip(sampled_positive_anchors, sampled_negative_anchors)]
-
+            # print(sum(anchor.numel() for anchor in sampled_anchors))
             # ... [continue with roi_head and loss calculation] ...
 
             # Now pass the concatenated_anchors to the roi_head
-            features_dict = {"0": feature}
+            # features_dict = feature = {"0": feature}
+            features_dict = feature
             class_logits = self.roi_head(features_dict, sampled_anchors, tuple(img_list.image_sizes))
-            
+                      
+            self.vis(x, anchors, sampled_positive_anchors, matched_gt_boxes, sampled_negative_anchors)
             # print("class_logits:", class_logits)
             
             loss = F.cross_entropy(class_logits, concatenated_labels, ignore_index=-1)            
@@ -144,19 +135,22 @@ class classifier(nn.Module):
             
             # 对于测试模式，确保 bbox 是正确格式
             bbox = [torch.tensor(targets).cuda().to(torch.float32)]
-            features_dict = {"0": feature}
+            # features_dict = {"0": feature}
+            features_dict = feature
             class_logits = self.roi_head(features_dict, bbox, tuple(img_list.image_sizes))
             # visualize_and_save_images(x, list([[{'bbox':targets[0]}]]))
-            print("class_logits:", class_logits)
+            # print("class_logits:", class_logits)
             
             return class_logits
-        
+
     def assign_targets_to_anchors(
         self, anchors: List[Tensor], targets: List[Dict[str, Tensor]]
     ) -> Tuple[List[Tensor], List[Tensor]]:
 
         labels = []
         matched_gt_boxes = []
+        top_k = 200  # 假设我们想要选择的top-k个正样本
+
         for anchors_per_image, targets_per_image in zip(anchors, targets):
             gt_boxes = torch.tensor([ann["bbox"] for ann in targets_per_image]).to('cuda')
 
@@ -168,26 +162,70 @@ class classifier(nn.Module):
             else:
                 match_quality_matrix = self.box_similarity(gt_boxes, anchors_per_image)
                 matched_idxs = self.proposal_matcher(match_quality_matrix)
-                # get the targets corresponding GT for each proposal
-                # NB: need to clamp the indices because we can have a single
-                # GT in the image, and matched_idxs can be -2, which goes
-                # out of bounds
+
+                # 只选择top-k个正样本
+                # 提取所有正样本的匹配质量分数
+                positive_match_quality = match_quality_matrix.max(dim=0).values
+                positive_idxs = matched_idxs >= 0
+
+                # 使用正样本的匹配质量分数来选择top-k个
+                _, topk_idxs = positive_match_quality[positive_idxs].topk(k=min(top_k, positive_idxs.sum()), largest=True)
+
+                # 更新labels_per_image为-1，表示忽略
+                labels_per_image = torch.full_like(matched_idxs, -1.0, dtype=torch.float32)
+
+                # 设置top-k正样本的标签为1
+                topk_anchors_idxs = torch.where(positive_idxs)[0][topk_idxs]
+                labels_per_image[topk_anchors_idxs] = 1.0
+
+                # 将背景anchors的标签设置为0
+                labels_per_image[matched_idxs == self.proposal_matcher.BELOW_LOW_THRESHOLD] = 0.0
+
+                # 获取每个top-k正样本对应的真实边界框
                 matched_gt_boxes_per_image = gt_boxes[matched_idxs.clamp(min=0)]
-
-                labels_per_image = matched_idxs >= 0
-                labels_per_image = labels_per_image.to(dtype=torch.float32)
-
-                # Background (negative examples)
-                bg_indices = matched_idxs == self.proposal_matcher.BELOW_LOW_THRESHOLD
-                labels_per_image[bg_indices] = 0.0
-
-                # discard indices that are between thresholds
-                inds_to_discard = matched_idxs == self.proposal_matcher.BETWEEN_THRESHOLDS
-                labels_per_image[inds_to_discard] = -1.0
+                matched_gt_boxes_per_image = matched_gt_boxes_per_image[topk_anchors_idxs]
 
             labels.append(labels_per_image)
             matched_gt_boxes.append(matched_gt_boxes_per_image)
         return labels, matched_gt_boxes
+        
+    # def assign_targets_to_anchors(
+    #     self, anchors: List[Tensor], targets: List[Dict[str, Tensor]]
+    # ) -> Tuple[List[Tensor], List[Tensor]]:
+
+    #     labels = []
+    #     matched_gt_boxes = []
+    #     for anchors_per_image, targets_per_image in zip(anchors, targets):
+    #         gt_boxes = torch.tensor([ann["bbox"] for ann in targets_per_image]).to('cuda')
+
+    #         if gt_boxes.numel() == 0:
+    #             # Background image (negative example)
+    #             device = anchors_per_image.device
+    #             matched_gt_boxes_per_image = torch.zeros(anchors_per_image.shape, dtype=torch.float32, device=device)
+    #             labels_per_image = torch.zeros((anchors_per_image.shape[0],), dtype=torch.float32, device=device)
+    #         else:
+    #             match_quality_matrix = self.box_similarity(gt_boxes, anchors_per_image)
+    #             matched_idxs = self.proposal_matcher(match_quality_matrix)
+    #             # get the targets corresponding GT for each proposal
+    #             # NB: need to clamp the indices because we can have a single
+    #             # GT in the image, and matched_idxs can be -2, which goes
+    #             # out of bounds
+    #             matched_gt_boxes_per_image = gt_boxes[matched_idxs.clamp(min=0)]
+
+    #             labels_per_image = matched_idxs >= 0
+    #             labels_per_image = labels_per_image.to(dtype=torch.float32)
+
+    #             # Background (negative examples)
+    #             bg_indices = matched_idxs == self.proposal_matcher.BELOW_LOW_THRESHOLD
+    #             labels_per_image[bg_indices] = 0.0
+
+    #             # discard indices that are between thresholds
+    #             inds_to_discard = matched_idxs == self.proposal_matcher.BETWEEN_THRESHOLDS
+    #             labels_per_image[inds_to_discard] = -1.0
+
+    #         labels.append(labels_per_image)
+    #         matched_gt_boxes.append(matched_gt_boxes_per_image)
+    #     return labels, matched_gt_boxes
         
 class RoI_Head(nn.Module):
     def __init__(

@@ -1,0 +1,121 @@
+wandb_version: 1
+
+Training:
+  desc: null
+  value: true
+init_method:
+  desc: null
+  value: tcp://127.0.0.1:33111
+data_root:
+  desc: null
+  value: ./Data/
+train_steps:
+  desc: null
+  value: 60000
+img_size:
+  desc: null
+  value: 224
+pretrained_model:
+  desc: null
+  value: ./pretrained_model/80.7_T2T_ViT_t_14.pth.tar
+lr_decay_gamma:
+  desc: null
+  value: 0.1
+lr:
+  desc: null
+  value: 2.0e-05
+epochs:
+  desc: null
+  value: 200
+batch_size:
+  desc: null
+  value: 24
+stepvalue1:
+  desc: null
+  value: 30000
+stepvalue2:
+  desc: null
+  value: 45000
+trainset:
+  desc: null
+  value: Mydataset_harmonization_cv2diff_avg/
+save_model_dir:
+  desc: null
+  value: checkpoint/
+team_name:
+  desc: null
+  value: zzsf123
+project_name:
+  desc: null
+  value: SOD
+experiment_name:
+  desc: null
+  value: diff_avg_1000
+Testing:
+  desc: null
+  value: false
+save_test_path_root:
+  desc: null
+  value: preds/
+test_paths:
+  desc: null
+  value: DUTS/DUTS-TE
+Evaluation:
+  desc: null
+  value: false
+methods:
+  desc: null
+  value: RGB_VST
+save_dir:
+  desc: null
+  value: ./
+Inferencing:
+  desc: null
+  value: false
+video_input:
+  desc: null
+  value: video
+video_output_name:
+  desc: null
+  value: '1'
+Get_pred:
+  desc: null
+  value: false
+data_path:
+  desc: null
+  value: /opt/data/private/zsf/Railway/part4/allscenes
+local_rank:
+  desc: null
+  value: 0
+_wandb:
+  desc: null
+  value:
+    python_version: 3.8.18
+    cli_version: 0.16.3
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1710415013.635889
+    t:
+      1:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 63
+      2:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 63
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.8.18
+      5: 0.16.3
+      8:
+      - 5
+      - 9
+      13: linux-x86_64

@@ -1,10 +1,37 @@
-harmonization_cv2diff8000RGB (RGB_VST): 0.0095 IoU || 0.0013 mae || 0.0137 max-fm || 0.0135 mean-fm || 0.4429 max-Emeasure || 0.4313 mean-Emeasure || 0.7067 S-measure || 0.0009 AP || 0.3186 AUC.
-harmonization_cv2diff9000RGB (RGB_VST): 0.0089 IoU || 0.0013 mae || 0.0129 max-fm || 0.0125 mean-fm || 0.4528 max-Emeasure || 0.4387 mean-Emeasure || 0.7067 S-measure || 0.0008 AP || 0.3188 AUC.
-color_transfer_cv2diff7000RGB (RGB_VST): 0.0009 IoU || 0.0573 mae || 0.0012 max-fm || 0.0012 mean-fm || 0.2591 max-Emeasure || 0.2591 mean-Emeasure || 0.6511 S-measure || 0.0003 AP || 0.2903 AUC.
-color_transfer_cv2diff6000RGB (RGB_VST): 0.0013 IoU || 0.0566 mae || 0.0018 max-fm || 0.0018 mean-fm || 0.2628 max-Emeasure || 0.2625 mean-Emeasure || 0.6510 S-measure || 0.0003 AP || 0.2877 AUC.
-my_dataset (RGB_VST): 0.0093 IoU || 0.0470 Recall_0.2 || 0.0013 mae || 0.0133 max-fm || 0.0132 mean-fm || 0.4419 max-Emeasure || 0.4310 mean-Emeasure || 0.7068 S-measure || 0.0009 AP || 0.3193 AUC.
-harmonization_cv2diff8000RGB (RGB_VST): 0.0095 IoU || 0.0457 Recall_0.2 || 0.0013 mae || 0.0137 max-fm || 0.0135 mean-fm || 0.4429 max-Emeasure || 0.4313 mean-Emeasure || 0.7067 S-measure || 0.0009 AP || 0.3186 AUC.
-harmonization_cv2diff9000RGB (RGB_VST): 0.0089 IoU || 0.0459 Recall_0.2 || 0.0013 mae || 0.0129 max-fm || 0.0125 mean-fm || 0.4528 max-Emeasure || 0.4387 mean-Emeasure || 0.7067 S-measure || 0.0008 AP || 0.3188 AUC.
-color_transfer_cv2diff7000RGB (RGB_VST): 0.0009 IoU || 0.0252 Recall_0.2 || 0.0573 mae || 0.0012 max-fm || 0.0012 mean-fm || 0.2591 max-Emeasure || 0.2591 mean-Emeasure || 0.6511 S-measure || 0.0003 AP || 0.2903 AUC.
-color_transfer_cv2diff6000RGB (RGB_VST): 0.0013 IoU || 0.0190 Recall_0.2 || 0.0566 mae || 0.0018 max-fm || 0.0018 mean-fm || 0.2628 max-Emeasure || 0.2625 mean-Emeasure || 0.6510 S-measure || 0.0003 AP || 0.2877 AUC.
-harmonization_cv2diff6000RGB (RGB_VST): 0.0097 IoU || 0.0432 Recall_0.2 || 0.0016 mae || 0.0134 max-fm || 0.0133 mean-fm || 0.4360 max-Emeasure || 0.4233 mean-Emeasure || 0.7062 S-measure || 0.0008 AP || 0.3172 AUC.
+ref15:
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred (RGB_VST): 0.0125 IoU || 0.0784 Recall_0.2 || 0.0022 mae || 0.0173 max-fm || 0.0165 mean-fm || 0.4028 max-Emeasure || 0.3860 mean-Emeasure || 0.7164 S-measure || 0.0014 AP || 0.3242 AUC.
+
+random1:
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img (RGB_VST): 0.0122 IoU || 0.1002 Recall_0.2 || 0.0042 mae || 0.0174 max-fm || 0.0171 mean-fm || 0.3553 max-Emeasure || 0.3420 mean-Emeasure || 0.7148 S-measure || 0.0019 AP || 0.3352 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box (RGB_VST): 0.0111 IoU || 0.1149 Recall_0.2 || 0.0069 mae || 0.0156 max-fm || 0.0154 mean-fm || 0.3185 max-Emeasure || 0.3167 mean-Emeasure || 0.7105 S-measure || 0.0018 AP || 0.3405 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track (RGB_VST): 0.0344 IoU || 0.1120 Recall_0.2 || 0.0030 mae || 0.0451 max-fm || 0.0446 mean-fm || 0.3908 max-Emeasure || 0.3876 mean-Emeasure || 0.7303 S-measure || 0.0048 AP || 0.3404 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_none (RGB_VST): 0.0000 IoU || 0.0000 Recall_0.2 || 0.0004 mae || 0.0005 max-fm || 0.0000 mean-fm || 0.2501 max-Emeasure || 0.2501 mean-Emeasure || 0.7167 S-measure || 0.0002 AP || 0.2847 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking_onlylast (RGB_VST): 0.0166 IoU || 0.0303 Recall_0.2 || 0.0152 mae || 0.0190 max-fm || 0.0184 mean-fm || 0.3104 max-Emeasure || 0.3097 mean-Emeasure || 0.7774 S-measure || 0.0007 AP || 0.2239 AUC.
+
+ref15:
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img (RGB_VST): 0.0063 IoU || 0.0428 Recall_0.2 || 0.0026 mae || 0.0090 max-fm || 0.0088 mean-fm || 0.3825 max-Emeasure || 0.3677 mean-Emeasure || 0.7129 S-measure || 0.0006 AP || 0.3065 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box (RGB_VST): 0.0060 IoU || 0.0500 Recall_0.2 || 0.0038 mae || 0.0084 max-fm || 0.0082 mean-fm || 0.3441 max-Emeasure || 0.3422 mean-Emeasure || 0.7113 S-measure || 0.0006 AP || 0.3091 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track (RGB_VST): 0.0146 IoU || 0.0488 Recall_0.2 || 0.0011 mae || 0.0196 max-fm || 0.0193 mean-fm || 0.3923 max-Emeasure || 0.3912 mean-Emeasure || 0.7223 S-measure || 0.0011 AP || 0.3094 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking (RGB_VST): 0.0146 IoU || 0.0488 Recall_0.2 || 0.0011 mae || 0.0196 max-fm || 0.0193 mean-fm || 0.3923 max-Emeasure || 0.3912 mean-Emeasure || 0.7223 S-measure || 0.0011 AP || 0.3094 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking_onlylast (RGB_VST): 0.0143 IoU || 0.0473 Recall_0.2 || 0.0011 mae || 0.0193 max-fm || 0.0190 mean-fm || 0.3927 max-Emeasure || 0.3915 mean-Emeasure || 0.7218 S-measure || 0.0011 AP || 0.3086 AUC.
+
+ref15_0-14
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img (RGB_VST): 0.0063 IoU || 0.0396 Recall_0.2 || 0.0025 mae || 0.0091 max-fm || 0.0087 mean-fm || 0.3892 max-Emeasure || 0.3748 mean-Emeasure || 0.7128 S-measure || 0.0005 AP || 0.3050 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box (RGB_VST): 0.0058 IoU || 0.0455 Recall_0.2 || 0.0035 mae || 0.0080 max-fm || 0.0080 mean-fm || 0.3543 max-Emeasure || 0.3518 mean-Emeasure || 0.7115 S-measure || 0.0005 AP || 0.3070 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track (RGB_VST): 0.0134 IoU || 0.0445 Recall_0.2 || 0.0010 mae || 0.0178 max-fm || 0.0177 mean-fm || 0.3945 max-Emeasure || 0.3932 mean-Emeasure || 0.7212 S-measure || 0.0009 AP || 0.3073 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking (RGB_VST): 0.0134 IoU || 0.0445 Recall_0.2 || 0.0010 mae || 0.0178 max-fm || 0.0177 mean-fm || 0.3945 max-Emeasure || 0.3932 mean-Emeasure || 0.7212 S-measure || 0.0009 AP || 0.3073 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking_onlylast (RGB_VST): 0.0132 IoU || 0.0427 Recall_0.2 || 0.0011 mae || 0.0176 max-fm || 0.0175 mean-fm || 0.3974 max-Emeasure || 0.3959 mean-Emeasure || 0.7208 S-measure || 0.0009 AP || 0.3064 AUC.
+
+refavg
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img (RGB_VST): 0.0123 IoU || 0.0835 Recall_0.2 || 0.0030 mae || 0.0169 max-fm || 0.0169 mean-fm || 0.3744 max-Emeasure || 0.3604 mean-Emeasure || 0.7179 S-measure || 0.0015 AP || 0.3274 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box (RGB_VST): 0.0110 IoU || 0.0927 Recall_0.2 || 0.0046 mae || 0.0149 max-fm || 0.0148 mean-fm || 0.3352 max-Emeasure || 0.3338 mean-Emeasure || 0.7148 S-measure || 0.0014 AP || 0.3304 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track (RGB_VST): 0.0321 IoU || 0.0924 Recall_0.2 || 0.0018 mae || 0.0430 max-fm || 0.0425 mean-fm || 0.4011 max-Emeasure || 0.3988 mean-Emeasure || 0.7306 S-measure || 0.0040 AP || 0.3311 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking (RGB_VST): 0.0321 IoU || 0.0924 Recall_0.2 || 0.0018 mae || 0.0430 max-fm || 0.0425 mean-fm || 0.4011 max-Emeasure || 0.3988 mean-Emeasure || 0.7306 S-measure || 0.0040 AP || 0.3311 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking_onlylast (RGB_VST): 0.0302 IoU || 0.0950 Recall_0.2 || 0.0021 mae || 0.0402 max-fm || 0.0398 mean-fm || 0.3957 max-Emeasure || 0.3933 mean-Emeasure || 0.7295 S-measure || 0.0038 AP || 0.3323 AUC.
+
+ref0
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img (RGB_VST): 0.0157 IoU || 0.1032 Recall_0.2 || 0.0042 mae || 0.0216 max-fm || 0.0214 mean-fm || 0.3488 max-Emeasure || 0.3364 mean-Emeasure || 0.7169 S-measure || 0.0022 AP || 0.3379 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box (RGB_VST): 0.0132 IoU || 0.0406 Recall_0.2 || 0.0026 mae || 0.0182 max-fm || 0.0181 mean-fm || 0.3519 max-Emeasure || 0.3503 mean-Emeasure || 0.7184 S-measure || 0.0010 AP || 0.3048 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track (RGB_VST): 0.0421 IoU || 0.1182 Recall_0.2 || 0.0026 mae || 0.0559 max-fm || 0.0553 mean-fm || 0.3952 max-Emeasure || 0.3924 mean-Emeasure || 0.7387 S-measure || 0.0064 AP || 0.3439 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking (RGB_VST): 0.0258 IoU || 0.3494 Recall_0.2 || 0.0938 mae || 0.0387 max-fm || 0.0352 mean-fm || 0.3816 max-Emeasure || 0.3348 mean-Emeasure || 0.6610 S-measure || 0.0118 AP || 0.4277 AUC.
+Mydataset_harmonization_cv2diff6000RGBVST_Get_pred_img_box_track_tracking_onlylast (RGB_VST): 0.0252 IoU || 0.3371 Recall_0.2 || 0.0890 mae || 0.0377 max-fm || 0.0343 mean-fm || 0.3795 max-Emeasure || 0.3373 mean-Emeasure || 0.6650 S-measure || 0.0111 AP || 0.4231 AUC.

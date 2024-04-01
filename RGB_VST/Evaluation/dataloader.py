@@ -28,6 +28,7 @@ class EvalDataset(data.Dataset):
         
         # 定义要遍历的目录
         root_dir = '/opt/data/private/zsf/VST_railway/RGB_VST/Pred/test'
+        # root_dir = '/opt/data/private/zsf/VST_railway/RGB_VST/Data/Mydataset_harmonization_cv2diff_avg/my-Image'
 
         # 初始化一个空列表，用于存放找到的图片路径
         self.image_path = []
@@ -45,6 +46,7 @@ class EvalDataset(data.Dataset):
                     
                             # 定义要遍历的目录
         root_dir = '/opt/data/private/zsf/VST_railway/RGB_VST/GT'
+        # root_dir = '/opt/data/private/zsf/VST_railway/RGB_VST/Data/Mydataset_harmonization_cv2diff_avg/my-Mask'
 
         # 初始化一个空列表，用于存放找到的图片路径
         self.label_path = []

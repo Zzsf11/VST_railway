@@ -93,13 +93,14 @@ class ImageData(data.Dataset):
             label = Image.open(self.label_path[item]).convert('L')
             contour = Image.open(self.contour_path[item]).convert('L')
             random_size = self.scale_size
-
+            
             new_img = trans.Scale((random_size, random_size))(image)
             new_label = trans.Scale((random_size, random_size), interpolation=Image.NEAREST)(label)
             new_contour = trans.Scale((random_size, random_size), interpolation=Image.NEAREST)(contour)
 
             # random crop
             w, h = new_img.size
+
             if w != self.img_size and h != self.img_size:
                 x1 = random.randint(0, w - self.img_size)
                 y1 = random.randint(0, h - self.img_size)
@@ -174,7 +175,10 @@ def get_loader(dataset_list, data_root, img_size, mode='train'):
             trans.Scale((img_size//2, img_size//2), interpolation=Image.NEAREST),
             transforms.ToTensor(),
         ])
-        scale_size = 256
+        if img_size == 224:
+            scale_size = 256 # img_size = 224
+        elif img_size == 448:
+            scale_size = 512
     else:
         transform = trans.Compose([
             trans.Scale((img_size, img_size)),

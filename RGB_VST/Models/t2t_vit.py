@@ -9,7 +9,7 @@ T2T-ViT
 import torch
 import torch.nn as nn
 
-from timm.models.helpers import load_pretrained
+from timm.models.helpers import load_pretrained, resume_checkpoint
 from timm.models.registry import register_model
 from timm.models.layers import trunc_normal_
 import numpy as np
@@ -18,6 +18,7 @@ from .token_performer import Token_performer
 from .transformer_block import Block, get_sinusoid_encoding
 from timm.models import load_checkpoint
 
+import math
 
 def _cfg(url='', **kwargs):
     return {
@@ -163,6 +164,8 @@ class T2T_ViT(nn.Module):
 
         cls_tokens = self.cls_token.expand(B, -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
+        # print(f"x.shape: {x.shape}")
+        # print(f"self.pos_embed.shape: {self.pos_embed.shape}")
         x = x + self.pos_embed
         x = self.pos_drop(x)
 
@@ -186,7 +189,7 @@ def T2t_vit_t_14(pretrained=True, **kwargs):  # adopt transformers for tokens to
         # kwargs.setdefault('qk_scale', 384 ** -0.5)
 
     # model = T2T_ViT(tokens_type='transformer', embed_dim=384, depth=14, num_heads=6, mlp_ratio=3., **kwargs)
-    model = T2T_ViT(tokens_type='transformer', embed_dim=384, depth=14, num_heads=6, mlp_ratio=3.)
+    model = T2T_ViT(img_size=kwargs['args'].img_size ,tokens_type='transformer', embed_dim=384, depth=14, num_heads=6, mlp_ratio=3.)
     model.default_cfg = default_cfgs['T2t_vit_t_14']
     args = kwargs['args']
     if pretrained:
@@ -194,6 +197,7 @@ def T2t_vit_t_14(pretrained=True, **kwargs):  # adopt transformers for tokens to
         print('Model loaded from {}'.format(args.pretrained_model))
         # load_pretrained(
         #     model, num_classes=model.num_classes, in_chans=kwargs.get('in_chans', 3))
+
     return model
 
 @register_model
@@ -309,3 +313,34 @@ def T2t_vit_14_wide(pretrained=False, **kwargs):
         load_pretrained(
             model, num_classes=model.num_classes, in_chans=kwargs.get('in_chans', 3))
     return model
+
+def get_abs_pos(abs_pos, has_cls_token, hw):
+    """
+    Calculate absolute positional embeddings. If needed, resize embeddings and remove cls_token
+        dimension for the original embeddings.
+    Args:
+        abs_pos (Tensor): absolute positional embeddings with (1, num_position, C).
+        has_cls_token (bool): If true, has 1 embedding in abs_pos for cls token.
+        hw (Tuple): size of input image tokens.
+
+    Returns:
+        Absolute positional embeddings after processing with shape (1, H, W, C)
+    """
+    h, w = hw
+    if has_cls_token:
+        abs_pos = abs_pos[:, 1:]
+    xy_num = abs_pos.shape[1]
+    size = int(math.sqrt(xy_num))
+    assert size * size == xy_num
+
+    if size != h or size != w:
+        new_abs_pos = F.interpolate(
+            abs_pos.reshape(1, size, size, -1).permute(0, 3, 1, 2),
+            size=(h, w),
+            mode="bicubic",
+            align_corners=False,
+        )
+
+        return new_abs_pos.permute(0, 2, 3, 1)
+    else:
+        return abs_pos.reshape(1, h, w, -1)

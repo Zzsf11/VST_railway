@@ -10,6 +10,9 @@ from dataset import get_loader
 import math
 from Models.ImageDepthNet import ImageDepthNet
 import os
+import wandb
+import socket
+from pathlib import Path
 
 
 def save_loss(save_dir, whole_iter_num, epoch_total_loss, epoch_loss, epoch):
@@ -47,6 +50,20 @@ def train_net(num_gpus, args):
 
 
 def main(local_rank, num_gpus, args):
+    if local_rank == 0:
+        run_dir = Path("../results") / args.project_name / args.experiment_name
+        if not run_dir.exists():
+            os.makedirs(str(run_dir))
+        wandb.init(config=args,
+                project=args.project_name,
+                entity=args.team_name,
+                notes=socket.gethostname(),
+                name=args.experiment_name,
+                dir=str(run_dir),
+                job_type="training",
+                reinit=True)
+    
+    # print(f"local_rank{local_rank}")
 
     cudnn.benchmark = True
 
@@ -57,6 +74,19 @@ def main(local_rank, num_gpus, args):
     net = ImageDepthNet(args)
     net.train()
     net.cuda()
+    
+    # 加载保存的模型权重
+    model_path = args.save_model_dir
+    if model_path != "checkpoint/":
+        state_dict = torch.load(model_path)
+        from collections import OrderedDict
+        new_state_dict = OrderedDict()
+        for k, v in state_dict.items():
+            name = k[7:]  # remove `module.`
+            new_state_dict[name] = v
+        # load params
+        net.load_state_dict(new_state_dict)
+
 
     net = nn.SyncBatchNorm.convert_sync_batchnorm(net)
     net = torch.nn.parallel.DistributedDataParallel(
@@ -163,7 +193,7 @@ def main(local_rank, num_gpus, args):
 
             # if (local_rank == 0) and (whole_iter_num == args.train_steps):
             if (local_rank == 0) and (whole_iter_num % 1000 == 0):
-                torch.save(net.state_dict(), args.save_model_dir + f'{whole_iter_num}' + 'RGB_VST.pth')
+                torch.save(net.state_dict(), 'checkpoint/' + args.trainset[:-1] + f'{whole_iter_num}' + 'RGB_VST.pth')
 
             if whole_iter_num == args.train_steps:
                 return 0
@@ -177,8 +207,11 @@ def main(local_rank, num_gpus, args):
         print('Epoch finished ! Loss: {}'.format(epoch_total_loss / iter_num))
         save_lossdir = './loss.txt'
         save_loss(save_lossdir, whole_iter_num, epoch_total_loss / iter_num, epoch_loss/iter_num, epoch+1)
-
-
+        
+        if local_rank == 0:
+            wandb.log({'epoch_loss': epoch_total_loss / iter_num},step=epoch+1)
+    if local_rank == 0:
+        wandb.finish()
 
 
 

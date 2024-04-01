@@ -14,36 +14,40 @@ import cv2
 from pycocotools.coco import COCO
 
 
+'''
+得到视频抽帧样本的pred和GT
+通过帧序号找到对应帧，使用视频内前x帧做ref
 
+'''
 
 def diff_video(vid_frames, index):
     """
-    Compute the difference of each frame in the video with the first frame.
-    
-    Args:
-    first_frame (np.array): The first frame of the video.
-    video (cv2.VideoCapture): The video capture object.
+    计算视频中每一帧与第一帧的差异。
 
-    Returns:
-    list: A list of frames showing the difference with the first frame.
+    参数:
+    vid_frames (list of np.array): 视频帧的列表。
+    index (list of int): 要计算差异的帧的索引列表。
+
+    返回:
+    list: 与第一帧显示差异的帧列表。
     """
     ref = 15
     
-    num_frames = len(vid_frames)
     diff_frames = []
 
+    # reference_frame = np.mean(vid_frames[:], axis=0).astype(np.uint8)
+
     for i in index:
-        if i < ref:
-            # If it's one of the first 30 frames, use the first frame as a reference
-            reference_frame = vid_frames[0]
-        else:
-            # Calculate the average of the preceding 30 frames
-            reference_frame = np.mean(vid_frames[i-ref:i], axis=0).astype(np.uint8)
-        # reference_frame = vid_frames[0]
-        # Compute the absolute difference
+        # if i < ref:
+        #     # 如果是前ref帧，使用第一帧作为参考
+        reference_frame = vid_frames[0]
+        # else:
+        #     # 计算前ref帧的平均值作为参考，排除当前帧i
+        #     reference_frame = np.mean(vid_frames[i-ref:i-1], axis=0).astype(np.uint8)
+            
+        # 计算绝对差异
         diff = cv2.absdiff(reference_frame, vid_frames[i])
         diff_frames.append(diff)
-
 
     return diff_frames
 
@@ -122,6 +126,9 @@ def get_pred(args):
                 break
 
         diff_frames = diff_video(vid_frames, frame_index)
+        diff_folder = os.path.join('/opt/data/private/zsf/VST_railway/RGB_VST/Data/diff_video_ref_0', video_name)
+        if not os.path.exists(diff_folder):
+            os.makedirs(diff_folder)
         video.release()
 
         
@@ -142,7 +149,6 @@ def get_pred(args):
             images, image_w, image_h = transform_only(frame, args.img_size)
             images = Variable(images.cuda())
 
-            starts = time.time()
             images = images.unsqueeze(0)
 
             outputs_saliency, _ = net(images)
@@ -165,7 +171,11 @@ def get_pred(args):
             # mask_binary_3ch = np.dstack([mask_bool, mask_bool, mask_bool]).astype(np.uint8) # for vis mask
             
             pred_name = os.path.join(pred_folder, img_name[i])    
-            cv2.imwrite(pred_name, mask_bool)
+            # cv2.imwrite(pred_name, mask_bool)
+            
+            
+            diff_name = os.path.join(diff_folder, img_name[i])  
+            cv2.imwrite(diff_name, frame)
 
         print('video:{}, cost:{}'.format(args.video_input, np.mean(time_list) * 1000))
 
